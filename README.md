@@ -8,17 +8,17 @@ Personal portfolio website for **Arinze Ohaemesi**, Backend Engineer & Systems D
 
 ## Screenshots
 
-### Hero Section
-![Hero Section](screenshots/hero.png)
+### Hero
+![Hero](screenshots/hero.png)
+
+### Experience
+![Experience](screenshots/experience.png)
 
 ### Projects
-![Projects Section](screenshots/projects.png)
+![Projects](screenshots/projects.png)
 
-### Skills
-![Skills Section](screenshots/skills.png)
-
-### Contact
-![Contact Section](screenshots/contact.png)
+### Projects (cont.)
+![Projects 2](screenshots/projects2.png)
 
 ---
 
