@@ -644,5 +644,11 @@ window.addEventListener(<span class="str">"lockscreen:unlocked_home"</span>, () 
     document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
 </script>
 
+<!-- ── Vercel Web Analytics ── -->
+<script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
 </body>
 </html>
