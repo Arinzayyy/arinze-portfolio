@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESTABLISH LINK — Arinze.exe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --red:    #E60012;
+      --red-dk: #7A0008;
+      --black:  #080808;
+      --white:  #F5F0E8;
+      --gold:   #C9A85C;
+      --yellow: #FFD23F;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;background:var(--black);color:var(--white);overflow-x:hidden;overflow-y:auto;}
+
+    /* Background layers */
+    .bg-image{position:fixed;inset:0;pointer-events:none;z-index:0;background:url('persona5background.webp') center/cover no-repeat;}
+    .bg-overlay{position:fixed;inset:0;pointer-events:none;z-index:1;background:linear-gradient(105deg,rgba(0,0,0,0.78) 0%,rgba(8,2,2,0.74) 38%,rgba(4,0,0,0.82) 65%,rgba(0,0,0,0.85) 100%);}
+    .bg-red-tint{position:fixed;inset:0;pointer-events:none;z-index:2;background:linear-gradient(135deg,rgba(230,0,18,0.04) 0%,transparent 40%,rgba(230,0,18,0.06) 100%);}
+    .bg-scan{position:fixed;inset:0;pointer-events:none;z-index:3;background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,60,60,0.06) 3px,rgba(255,60,60,0.06) 4px);}
+    .bg-halftone{position:fixed;inset:0;pointer-events:none;z-index:3;background-image:radial-gradient(circle,rgba(230,0,18,0.22) 1px,transparent 1px);background-size:14px 14px;opacity:0.35;mask-image:linear-gradient(to left,rgba(0,0,0,0.7) 0%,transparent 55%);-webkit-mask-image:linear-gradient(to left,rgba(0,0,0,0.7) 0%,transparent 55%);}
+    .bg-noise{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0.055;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px;}
+    .bg-vignette{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 45%,rgba(0,0,0,0.75) 100%);}
+
+    /* HUD corners */
+    .hud-tl{position:fixed;top:18px;left:22px;z-index:20;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.30em;text-transform:uppercase;color:rgba(245,240,232,0.28);line-height:1.9;opacity:0;pointer-events:none;}
+    .hud-tr{position:fixed;top:18px;right:22px;z-index:20;font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(.7rem,1.2vw,.95rem);letter-spacing:.12em;color:rgba(245,240,232,0.22);text-align:right;transform:skewX(-8deg);opacity:0;pointer-events:none;}
+
+    /* Screen wrapper */
+    .screen{position:relative;z-index:5;width:100vw;min-height:100vh;display:flex;flex-direction:column;}
+
+    /* Page header */
+    .page-header{flex-shrink:0;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:1.2rem;padding:.65rem 2rem .6rem 2rem;border-bottom:1px solid rgba(230,0,18,0.14);background:rgba(8,8,8,0.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;}
+    .ph-back{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,168,92,0.5);cursor:pointer;transition:color .2s;flex-shrink:0;user-select:none;}
+    .ph-back:hover{color:var(--gold);}
+    .ph-divider{width:1px;height:26px;background:rgba(230,0,18,0.22);flex-shrink:0;}
+    .ph-eyebrow{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.36em;text-transform:uppercase;color:rgba(201,168,92,0.42);flex-shrink:0;}
+    .ph-title{font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(1.3rem,2.4vw,1.85rem);letter-spacing:.06em;color:var(--white);transform:skewX(-9deg);transform-origin:left center;display:inline-block;text-shadow:3px 3px 0 rgba(0,0,0,0.85),-1px -1px 0 rgba(230,0,18,0.3);flex-shrink:0;}
+    .ph-sub{font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.28em;text-transform:uppercase;color:rgba(230,0,18,0.55);align-self:flex-end;padding-bottom:3px;}
+    .ph-rank{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.22em;color:rgba(245,240,232,0.18);flex-shrink:0;}
+
+    /* Shared label helpers */
+    .sec-eyebrow{font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(201,168,92,0.38);margin-bottom:.3rem;display:block;}
+    .section-label{display:inline-block;font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(.62rem,1.1vw,.82rem);letter-spacing:.12em;background:var(--red);color:var(--white);padding:.2rem .8rem .2rem .45rem;transform:skewX(-10deg);margin-bottom:.6rem;text-shadow:1px 1px 0 rgba(0,0,0,0.5);}
+    .section-label span{display:inline-block;transform:skewX(10deg);}
+
+    /* Content area */
+    .content-area{flex:1;display:flex;flex-direction:column;gap:1.2rem;}
+
+    /* ---- SECTION A: DIRECT CHANNELS ---- */
+    .channels-list{display:flex;flex-direction:column;gap:.55rem;}
+    .channel-row{background:rgba(8,8,8,0.82);border:1px solid rgba(230,0,18,0.22);padding:.85rem 1rem;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));display:flex;align-items:center;gap:1rem;transition:border-color .2s, background .2s;}
+    .channel-row:hover{border-color:var(--red);background:rgba(230,0,18,0.04);}
+    .channel-icon{font-size:1.4rem;flex-shrink:0;line-height:1;}
+    .channel-name{font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(.85rem,1.5vw,1.1rem);letter-spacing:.08em;color:var(--white);transform:skewX(-8deg);display:inline-block;min-width:88px;flex-shrink:0;text-shadow:1px 1px 0 rgba(0,0,0,0.8);}
+    .channel-detail{font-family:'JetBrains Mono',monospace;font-size:clamp(.6rem,1vw,.72rem);letter-spacing:.08em;color:rgba(245,240,232,0.35);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .connect-btn{font-family:'Anton',sans-serif;font-style:italic;font-size:.72rem;letter-spacing:.1em;background:var(--red);color:var(--white);padding:.3rem .9rem .28rem .65rem;transform:skewX(-10deg);display:inline-block;flex-shrink:0;cursor:pointer;text-decoration:none;text-shadow:1px 1px 0 rgba(0,0,0,0.5);transition:background .2s;}
+    .connect-btn:hover{background:var(--red-dk);}
+    .connect-btn span{display:inline-block;transform:skewX(10deg);}
+
+    /* ---- SECTION B: SEND MESSAGE ---- */
+    .form-subtitle{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.22em;color:rgba(201,168,92,0.38);margin-bottom:.8rem;margin-top:-.2rem;}
+    .form-card{background:rgba(8,8,8,0.72);border:1px solid rgba(230,0,18,0.18);padding:1.2rem 1.4rem;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));}
+    .form-fields{display:flex;flex-direction:column;gap:.75rem;}
+    .form-group{display:flex;flex-direction:column;}
+    .form-label{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.32em;text-transform:uppercase;color:rgba(201,168,92,0.45);display:block;margin-bottom:.28rem;}
+    .form-input,.form-textarea{width:100%;background:rgba(245,240,232,0.04);border:1px solid rgba(230,0,18,0.2);color:var(--white);font-family:'JetBrains Mono',monospace;font-size:clamp(.62rem,1vw,.75rem);letter-spacing:.06em;padding:.55rem .7rem;outline:none;transition:border-color .2s, background .2s;border-radius:0;}
+    .form-input:focus,.form-textarea:focus{border-color:var(--red);background:rgba(230,0,18,0.03);}
+    .form-textarea{min-height:108px;resize:vertical;line-height:1.6;}
+    .form-input::placeholder,.form-textarea::placeholder{color:rgba(245,240,232,0.18);}
+    .form-submit-row{display:flex;justify-content:flex-end;margin-top:.25rem;}
+    .submit-btn{font-family:'Anton',sans-serif;font-style:italic;font-size:.82rem;letter-spacing:.1em;background:var(--red);color:var(--white);padding:.45rem 1.4rem .42rem 1rem;transform:skewX(-10deg);display:inline-block;flex-shrink:0;cursor:pointer;text-decoration:none;text-shadow:1px 1px 0 rgba(0,0,0,0.5);transition:background .2s;border:none;}
+    .submit-btn:hover{background:var(--red-dk);}
+    .submit-btn span{display:inline-block;transform:skewX(10deg);}
+
+    /* ---- SECTION C: RESPONSE PROTOCOL ---- */
+    .response-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .response-card{background:rgba(8,8,8,0.82);border:1px solid rgba(201,168,92,0.2);padding:1rem 1.1rem;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+    .response-turnaround-eyebrow{font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.28em;text-transform:uppercase;color:rgba(201,168,92,0.45);margin-bottom:.4rem;display:block;}
+    .response-big{font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(2.8rem,5vw,4rem);color:var(--red);transform:skewX(-8deg);display:inline-block;line-height:1;margin-bottom:.15rem;}
+    .response-subtitle{font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(245,240,232,0.22);margin-bottom:.75rem;}
+    .response-divider{height:1px;background:rgba(230,0,18,0.15);margin:.65rem 0;}
+    .protocol-row{display:flex;align-items:center;gap:.6rem;padding:.3rem 0;}
+    .protocol-icon{font-size:1rem;flex-shrink:0;line-height:1;}
+    .protocol-label{font-family:'Anton',sans-serif;font-style:italic;font-size:.68rem;letter-spacing:.08em;color:var(--white);transform:skewX(-6deg);display:inline-block;flex-shrink:0;min-width:110px;}
+    .protocol-value{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.06em;color:rgba(245,240,232,0.35);}
+
+    /* Calendar card */
+    .calendar-card{background:rgba(8,8,8,0.72);border:1px solid rgba(230,0,18,0.14);padding:.85rem;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));}
+    .calendar-eyebrow{font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.28em;text-transform:uppercase;color:rgba(201,168,92,0.38);margin-bottom:.6rem;display:block;}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+    .cal-header{font-family:'JetBrains Mono',monospace;font-size:6px;letter-spacing:.08em;text-align:center;padding:4px 2px;color:rgba(245,240,232,0.2);text-transform:uppercase;}
+    .cal-cell{font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:.08em;text-align:center;padding:6px 4px;color:rgba(245,240,232,0.28);background:rgba(245,240,232,0.03);border:1px solid rgba(230,0,18,0.08);}
+    .cal-cell.active{background:rgba(230,0,18,0.12);border-color:rgba(230,0,18,0.3);color:rgba(245,240,232,0.55);}
+    .cal-cell.today{background:var(--red);color:var(--white);border-color:var(--red);}
+
+    /* Cmd bar */
+    .cmd-bar{flex-shrink:0;height:50px;position:sticky;bottom:0;z-index:10;display:flex;align-items:center;gap:2rem;padding:0 1.6rem;background:rgba(8,8,8,0.92);border-top:1px solid rgba(230,0,18,0.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+    .cmd-item{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.14em;color:rgba(245,240,232,0.45);text-transform:uppercase;}
+    .cmd-key{background:rgba(245,240,232,0.04);border:1px solid rgba(245,240,232,0.09);padding:2px 6px;font-size:7px;clip-path:polygon(0 0,calc(100% - 4px) 0,100% 4px,100% 100%,4px 100%,0 calc(100% - 4px));font-family:'JetBrains Mono',monospace;}
+    #back-btn{color:rgba(201,168,92,0.55);cursor:pointer;transition:color .2s,text-shadow .2s;}
+    #back-btn:hover{color:var(--gold);text-shadow:0 0 10px rgba(201,168,92,0.4);}
+    #back-btn .cmd-key{border-color:rgba(201,168,92,0.22);background:rgba(201,168,92,0.04);}
+    #exit-btn{margin-left:auto;color:rgba(201,168,92,0.55);cursor:pointer;transition:color .2s,text-shadow .2s;}
+    #exit-btn:hover{color:var(--gold);text-shadow:0 0 10px rgba(201,168,92,0.4);}
+    #exit-btn .cmd-key{border-color:rgba(201,168,92,0.22);background:rgba(201,168,92,0.04);}
+
+    /* Exit wipe */
+    #exit-wipe{position:fixed;inset:0;z-index:9999;display:none;pointer-events:none;}
+    #exit-wipe.ew-active{display:block;pointer-events:all;}
+    .ew-bar{position:absolute;inset:0;transform:translateX(-105%);}
+    .ew-bar-1{z-index:1;}.ew-bar-2{z-index:2;}.ew-bar-3{z-index:3;}
+    .ew-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;opacity:0;pointer-events:none;text-align:center;}
+    .ew-small{font-family:'JetBrains Mono',monospace;font-size:clamp(8px,1vw,11px);letter-spacing:.35em;text-transform:uppercase;color:rgba(245,240,232,0.55);margin-bottom:12px;}
+    .ew-big{font-family:'Anton',sans-serif;font-style:italic;font-size:clamp(64px,10vw,168px);letter-spacing:.04em;line-height:0.9;color:#F5F0E8;text-shadow:4px 4px 0 #E60012,8px 8px 0 rgba(0,0,0,0.5);transform:skewX(-8deg);display:inline-block;}
+    .ew-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(9px,1.1vw,13px);letter-spacing:.28em;text-transform:uppercase;color:rgba(245,240,232,0.45);margin-top:14px;}
+
+    /* Mobile */
+    @media(max-width:700px){
+      .content-area{padding:1rem 1.2rem 2rem;}
+      .response-grid{grid-template-columns:1fr!important;}
+      .hud-tl,.hud-tr{display:none;}
+      .ph-rank,.ph-sub{display:none;}
+      .page-header{padding:.55rem 1.2rem;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+  <div class="bg-red-tint"></div>
+  <div class="bg-scan"></div>
+  <div class="bg-halftone"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-vignette"></div>
+
+  <!-- HUD corners -->
+  <div class="hud-tl" id="hud-tl">CONTACT<br>// OPEN CHANNEL</div>
+  <div class="hud-tr" id="hud-tr">LINK PROTOCOL</div>
+
+  <!-- Exit wipe overlay -->
+  <div id="exit-wipe">
+    <div class="ew-bar ew-bar-1"></div>
+    <div class="ew-bar ew-bar-2"></div>
+    <div class="ew-bar ew-bar-3"></div>
+    <div class="ew-text" id="ew-text">
+      <div class="ew-small">// NAVIGATION CONFIRMED</div>
+      <div class="ew-big" id="ew-big">PORTFOLIO</div>
+      <div class="ew-sub" id="ew-sub">クラシック ・ RESTORING</div>
+    </div>
+  </div>
+
+  <!-- Screen -->
+  <div class="screen">
+
+    <!-- Page header -->
+    <div class="page-header" id="page-header">
+      <span class="ph-back" id="ph-back" role="button" tabindex="0">‹ BACK</span>
+      <div class="ph-divider"></div>
+      <span class="ph-eyebrow">// OPEN CHANNEL</span>
+      <span class="ph-title">CONTACT</span>
+      <span class="ph-sub">コンタクト</span>
+      <span class="ph-rank">4 CHANNELS</span>
+    </div>
+
+    <!-- Main content -->
+    <div class="content-area" style="max-width:860px;margin:0 auto;padding:1.5rem 2rem 2.5rem;">
+
+      <!-- SECTION A: DIRECT CHANNELS -->
+      <section id="sec-channels">
+        <span class="sec-eyebrow">// EXTERNAL S-LINKS</span>
+        <div class="section-label"><span>DIRECT CHANNELS</span></div>
+        <div class="channels-list">
+
+          <!-- LinkedIn -->
+          <div class="channel-row" id="ch-1">
+            <span class="channel-icon">💼</span>
+            <span class="channel-name">LINKEDIN</span>
+            <span class="channel-detail">linkedin.com/in/arinze-ohaemesi-1667a426b</span>
+            <a class="connect-btn" href="https://linkedin.com/in/arinze-ohaemesi-1667a426b" target="_blank" rel="noopener noreferrer"><span>★ CONNECT</span></a>
+          </div>
+
+          <!-- GitHub -->
+          <div class="channel-row" id="ch-2">
+            <span class="channel-icon">🐙</span>
+            <span class="channel-name">GITHUB</span>
+            <span class="channel-detail">github.com/Arinzayyy</span>
+            <a class="connect-btn" href="https://github.com/Arinzayyy" target="_blank" rel="noopener noreferrer"><span>★ CONNECT</span></a>
+          </div>
+
+          <!-- Email -->
+          <div class="channel-row" id="ch-3">
+            <span class="channel-icon">📬</span>
+            <span class="channel-name">EMAIL</span>
+            <span class="channel-detail">ohaemesiarinze@gmail.com</span>
+            <a class="connect-btn" href="mailto:ohaemesiarinze@gmail.com"><span>★ CONNECT</span></a>
+          </div>
+
+          <!-- Phone -->
+          <div class="channel-row" id="ch-4">
+            <span class="channel-icon">📞</span>
+            <span class="channel-name">PHONE</span>
+            <span class="channel-detail">(209) 707-7789</span>
+            <a class="connect-btn" href="tel:+12097077789"><span>★ CONNECT</span></a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION B: SEND MESSAGE -->
+      <section id="sec-form">
+        <span class="sec-eyebrow">// COMPOSE TRANSMISSION</span>
+        <div class="section-label"><span>SEND MESSAGE</span></div>
+        <div class="form-subtitle">// FIELDS ARE ENCRYPTED IN TRANSIT</div>
+        <div class="form-card">
+          <div class="form-fields">
+
+            <div class="form-group">
+              <label class="form-label" for="f-from">FROM</label>
+              <input class="form-input" type="text" id="f-from" name="from" placeholder="Your name" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-replyto">REPLY-TO</label>
+              <input class="form-input" type="email" id="f-replyto" name="replyto" placeholder="your@email.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-subject">SUBJECT</label>
+              <input class="form-input" type="text" id="f-subject" name="subject" placeholder="Re: Open Role / Collab / ...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="f-message">MESSAGE</label>
+              <textarea class="form-textarea" id="f-message" name="message" placeholder="Your message..."></textarea>
+            </div>
+
+            <div class="form-submit-row">
+              <button class="submit-btn" type="button" onclick="handleSubmit()"><span>★ TRANSMIT</span></button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION C: RESPONSE PROTOCOL -->
+      <section id="sec-protocol">
+        <span class="sec-eyebrow">// SLA PARAMETERS</span>
+        <div class="section-label"><span>RESPONSE PROTOCOL</span></div>
+        <div class="response-grid">
+
+          <!-- Left: Response time card -->
+          <div class="response-card">
+            <span class="response-turnaround-eyebrow">EXPECTED TURNAROUND</span>
+            <div><span class="response-big">24H</span></div>
+            <div class="response-subtitle">STANDARD RESPONSE TIME</div>
+            <div class="response-divider"></div>
+            <div class="protocol-row">
+              <span class="protocol-icon">⚡</span>
+              <span class="protocol-label">URGENT MATTERS</span>
+              <span class="protocol-value">Same day if possible</span>
+            </div>
+            <div class="protocol-row">
+              <span class="protocol-icon">💼</span>
+              <span class="protocol-label">WORK INQUIRIES</span>
+              <span class="protocol-value">Within 24 hours</span>
+            </div>
+            <div class="protocol-row">
+              <span class="protocol-icon">🤝</span>
+              <span class="protocol-label">COLLABS / PROJECTS</span>
+              <span class="protocol-value">Within 48 hours</span>
+            </div>
+          </div>
+
+          <!-- Right: Calendar card -->
+          <div class="calendar-card">
+            <span class="calendar-eyebrow">// AVAILABILITY WINDOW</span>
+            <div class="calendar-grid">
+              <!-- Day headers -->
+              <div class="cal-header">MON</div>
+              <div class="cal-header">TUE</div>
+              <div class="cal-header">WED</div>
+              <div class="cal-header">THU</div>
+              <div class="cal-header">FRI</div>
+              <div class="cal-header">SAT</div>
+              <div class="cal-header">SUN</div>
+              <!-- Row 1: days 1-7 -->
+              <div class="cal-cell">1</div>
+              <div class="cal-cell">2</div>
+              <div class="cal-cell active">3</div>
+              <div class="cal-cell">4</div>
+              <div class="cal-cell">5</div>
+              <div class="cal-cell">6</div>
+              <div class="cal-cell active">7</div>
+              <!-- Row 2: days 8-14 -->
+              <div class="cal-cell">8</div>
+              <div class="cal-cell">9</div>
+              <div class="cal-cell">10</div>
+              <div class="cal-cell">11</div>
+              <div class="cal-cell active">12</div>
+              <div class="cal-cell">13</div>
+              <div class="cal-cell today">14</div>
+              <!-- Row 3: days 15-21 -->
+              <div class="cal-cell">15</div>
+              <div class="cal-cell active">16</div>
+              <div class="cal-cell">17</div>
+              <div class="cal-cell">18</div>
+              <div class="cal-cell">19</div>
+              <div class="cal-cell">20</div>
+              <div class="cal-cell active">21</div>
+              <!-- Row 4: days 22-28 -->
+              <div class="cal-cell">22</div>
+              <div class="cal-cell">23</div>
+              <div class="cal-cell">24</div>
+              <div class="cal-cell">25</div>
+              <div class="cal-cell active">26</div>
+              <div class="cal-cell">27</div>
+              <div class="cal-cell">28</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div><!-- /content-area -->
+
+    <!-- Cmd bar -->
+    <div class="cmd-bar">
+      <div class="cmd-item" id="back-btn" role="button" tabindex="0">
+        <span class="cmd-key">⌫</span><span>MAIN MENU</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-key">↑↓</span><span>SCROLL</span>
+      </div>
+      <div class="cmd-item" id="exit-btn" role="button" tabindex="0">
+        <span class="cmd-key">ESC</span><span>EXIT MODE</span>
+      </div>
+    </div>
+
+  </div><!-- /screen -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    // ── Form submit ──────────────────────────────────────────────────────────
+    function handleSubmit() {
+      const from    = document.getElementById('f-from').value.trim();
+      const replyto = document.getElementById('f-replyto').value.trim();
+      const subject = document.getElementById('f-subject').value.trim() || 'Hello from your portfolio';
+      const body    = document.getElementById('f-message').value.trim();
+      const bodyFull = (from ? 'From: ' + from + '\n\n' : '') + body;
+      window.location.href = 'mailto:ohaemesiarinze@gmail.com'
+        + '?subject=' + encodeURIComponent(subject)
+        + (replyto ? '&reply-to=' + encodeURIComponent(replyto) : '')
+        + '&body=' + encodeURIComponent(bodyFull);
+    }
+
+    // ── Exit wipe ────────────────────────────────────────────────────────────
+    const exitWipe  = document.getElementById('exit-wipe');
+    const exitBtn   = document.getElementById('exit-btn');
+    const backBtn   = document.getElementById('back-btn');
+    const phBack    = document.getElementById('ph-back');
+    const ewBars    = exitWipe.querySelectorAll('.ew-bar');
+    const ewText    = document.getElementById('ew-text');
+    const ewBig     = document.getElementById('ew-big');
+    const ewSub     = document.getElementById('ew-sub');
+    let busy = false;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function triggerExitWipe(dest, style) {
+      if (busy) return; busy = true;
+      if (style === 'exit') {
+        ewBars[0].style.background = '#f5f0e8';
+        ewBars[1].style.background = '#e60012';
+        ewBars[2].style.background = '#080808';
+        ewBig.textContent = 'PORTFOLIO';
+        ewSub.textContent = 'クラシック ・ RESTORING';
+      } else {
+        ewBars[0].style.background = '#e60012';
+        ewBars[1].style.background = '#c9a85c';
+        ewBars[2].style.background = '#080808';
+        ewBig.textContent = 'MAIN MENU';
+        ewSub.textContent = 'メインメニュー ・ LOADED';
+      }
+      exitWipe.classList.add('ew-active');
+      gsap.set(ewText, { opacity: 0 });
+      const tl = gsap.timeline({ onComplete: () => { window.location.href = dest; } });
+      tl.fromTo(ewBars[0], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'})
+        .fromTo(ewBars[1], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'}, '-=0.22')
+        .fromTo(ewBars[2], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'}, '-=0.22')
+        .to(ewText, {opacity:1, duration:0.22, ease:'power2.out'}, '+=0.04')
+        .to({}, {duration:0.38});
+    }
+
+    exitBtn.addEventListener('click',   () => triggerExitWipe('index.html',   'exit'));
+    exitBtn.addEventListener('keydown', (e) => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); triggerExitWipe('index.html','exit'); }});
+    backBtn.addEventListener('click',   () => triggerExitWipe('persona.html', 'menu'));
+    backBtn.addEventListener('keydown', (e) => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); triggerExitWipe('persona.html','menu'); }});
+    phBack.addEventListener('click',    () => triggerExitWipe('persona.html', 'menu'));
+    phBack.addEventListener('keydown',  (e) => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); triggerExitWipe('persona.html','menu'); }});
+    document.addEventListener('keydown', (e) => {
+      if (busy) return;
+      if (e.key === 'Escape')    { triggerExitWipe('index.html',  'exit'); return; }
+      if (e.key === 'Backspace') { e.preventDefault(); triggerExitWipe('persona.html', 'menu'); }
+    });
+
+    // ── Entry animation ──────────────────────────────────────────────────────
+    const pageHeader  = document.getElementById('page-header');
+    const hudTl       = document.getElementById('hud-tl');
+    const hudTr       = document.getElementById('hud-tr');
+    const secChannels = document.getElementById('sec-channels');
+    const ch1         = document.getElementById('ch-1');
+    const ch2         = document.getElementById('ch-2');
+    const ch3         = document.getElementById('ch-3');
+    const ch4         = document.getElementById('ch-4');
+    const secForm     = document.getElementById('sec-form');
+    const secProtocol = document.getElementById('sec-protocol');
+
+    if (prefersReduced) {
+      gsap.set([pageHeader, hudTl, hudTr, secChannels, ch1, ch2, ch3, ch4, secForm, secProtocol], { opacity: 1, y: 0, x: 0 });
+    } else {
+      // Set initial hidden states
+      gsap.set(pageHeader,  { opacity: 0, y: -14 });
+      gsap.set(hudTl,       { opacity: 0 });
+      gsap.set(hudTr,       { opacity: 0 });
+      gsap.set(secChannels, { opacity: 0, y: 24 });
+      gsap.set([ch1, ch2, ch3, ch4], { opacity: 0, y: 18 });
+      gsap.set(secForm,     { opacity: 0, x: 38 });
+      gsap.set(secProtocol, { opacity: 0, y: 24 });
+
+      const master = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+      // page-header at 0s
+      master.to(pageHeader, { opacity: 1, y: 0, duration: 0.38 }, 0);
+
+      // HUD at 0.22s and 0.28s
+      master.to(hudTl, { opacity: 1, duration: 0.3 }, 0.22);
+      master.to(hudTr, { opacity: 1, duration: 0.3 }, 0.28);
+
+      // channels section at 0.14s
+      master.to(secChannels, { opacity: 1, y: 0, duration: 0.38 }, 0.14);
+
+      // individual channel rows staggered
+      master.to(ch1, { opacity: 1, y: 0, duration: 0.32 }, 0.22);
+      master.to(ch2, { opacity: 1, y: 0, duration: 0.32 }, 0.32);
+      master.to(ch3, { opacity: 1, y: 0, duration: 0.32 }, 0.42);
+      master.to(ch4, { opacity: 1, y: 0, duration: 0.32 }, 0.52);
+
+      // form section at 0.38s
+      master.to(secForm, { opacity: 1, x: 0, duration: 0.42 }, 0.38);
+
+      // protocol section at 0.72s
+      master.to(secProtocol, { opacity: 1, y: 0, duration: 0.42 }, 0.72);
+    }
+  </script>
+<script src="persona-sfx.js"></script>
+</body>
+</html>

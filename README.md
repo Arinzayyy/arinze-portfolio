@@ -24,13 +24,15 @@ Personal portfolio website for **Arinze Ohaemesi**, Backend Engineer & Systems D
 
 ## Features
 
-- **Red Glassmorphism UI** — deep dark background with heavy frosted glass cards, red glow hover effects, and gradient light orbs
+- **Red Glassmorphism UI** — deep dark background with frosted glass cards, red glow hover effects, and gradient light orbs
+- **Persona Mode** — a full Persona 5–styled alternate portfolio: skewed parallelogram menus, GSAP screen wipes, synthesized WebAudio button sounds (with a persistent mute toggle), star-burst effects, and six themed sub-pages
+- **6 Featured Projects** — Cloud Inventory System (capstone), Multiplayer Blackjack, AI Backend Prototypes, NoBox, Covenant, and Chronicles Saga
+- **2 Technical Case Studies** — deep dives on Chronicles Saga (branching narrative engine) and the Cloud Inventory System (caching, async pipelines, CI/CD)
+- **Experience Timeline** — date-pill timeline covering Tri Valley Urgent Care (Data Analyst → Junior SWE) and CSU East Bay
 - **Typing Animation** — hero cycles through roles: Backend Engineer, Systems Developer, AI Tinkerer, Builder, API Architect
-- **6 Featured Projects** — including Cloud Inventory System, Multiplayer Blackjack, NoBox, Covenant, Chronicles Saga, and AI Backend Prototypes
-- **Role Tab Switcher** — toggle between Junior SWE and Data Analyst experience at Tri Valley Care
 - **Easter Egg** — type the Konami code (↑↑↓↓←→←→BA) or click the logo 5×
-- **Fully Responsive** — mobile menu, fluid grid layouts, works on all screen sizes
-- **JetBrains Mono accents** — code-style labels and monospace typography throughout
+- **Fully Responsive** — mobile menu, fluid grid layouts, scroll progress bar, active-section nav highlighting, reduced-motion support
+- **SEO-ready** — meta description, Open Graph + Twitter cards, favicon
 
 ---
 
@@ -40,8 +42,10 @@ Personal portfolio website for **Arinze Ohaemesi**, Backend Engineer & Systems D
 |-------|-----------|
 | Markup | HTML5 |
 | Styling | Tailwind CSS (CDN) |
+| Animation | GSAP (Persona Mode), CSS keyframes |
+| Audio | WebAudio API (synthesized SFX, no audio files) |
 | Icons | Lucide Icons |
-| Fonts | Inter + JetBrains Mono (Google Fonts) |
+| Fonts | Inter + JetBrains Mono + Anton (Google Fonts) |
 | Scripting | Vanilla JavaScript |
 | Hosting | Vercel |
 
@@ -51,12 +55,21 @@ Personal portfolio website for **Arinze Ohaemesi**, Backend Engineer & Systems D
 
 ```
 arinze-portfolio/
-├── index.html        # Entire site — single file
-├── screenshots/      # Add screenshots here
-│   ├── hero.png
-│   ├── projects.png
-│   ├── skills.png
-│   └── contact.png
+├── index.html               # Main portfolio
+├── cloud-inventory.html     # Case study — Cloud Inventory System (capstone)
+├── chronicles-saga.html     # Case study — Chronicles Saga
+├── persona.html             # Persona Mode — main menu
+├── persona-about.html       # Persona Mode — confidant profile
+├── persona-work.html        # Persona Mode — projects (party roster)
+├── persona-journal.html     # Persona Mode — experience log
+├── persona-system.html      # Persona Mode — skills compendium
+├── persona-contact.html     # Persona Mode — contact link
+├── persona-sfx.js           # Shared WebAudio sound + game-feel engine
+├── Arinze_Ohaemesi_Resume.pdf
+├── portrait.jpg
+├── persona5background.webp
+├── persona-protagonist.webp
+├── screenshots/             # Project demos and README images
 └── README.md
 ```
 
@@ -94,10 +107,9 @@ git push origin main
 
 **Arinze Ohaemesi**
 - 📧 [ohaemesiarinze@gmail.com](mailto:ohaemesiarinze@gmail.com)
-- 📞 (209) 707-7789
 - 💼 [LinkedIn](https://www.linkedin.com/in/arinze-ohaemesi-1667a426b/)
 - 🐙 [GitHub](https://github.com/Arinzayyy)
 
 ---
 
-© 2025 Arinze Ohaemesi
+© 2026 Arinze Ohaemesi

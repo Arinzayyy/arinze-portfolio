@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnDeck — Case Study | Arinze Ohaemesi</title>
+    <meta name="description" content="Case study of OnDeck: a clinic shift-scheduling platform in production at Tri Valley Urgent Care. Next.js 14, Supabase, dual auth, Claude vision OCR with prompt caching, capacity enforcement.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080810'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='32' font-weight='900' text-anchor='middle' fill='%23ef4444'%3EAO%3C/text%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@0.469.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        body {
+            background-color: #080810;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(6, 182, 212, 0.10), transparent 60%),
+                radial-gradient(ellipse 70% 60% at 80% 100%, rgba(34, 211, 238, 0.08), transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(6, 182, 212, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+
+        .neon-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #06b6d4, #22d3ee, transparent);
+            border-radius: 2px;
+        }
+
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(6, 182, 212, 0.12);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #e2e8f0;
+        }
+        pre .kw  { color: #67e8f9; }
+        pre .str { color: #a5f3fc; }
+        pre .fn  { color: #22d3ee; }
+        pre .com { color: #64748b; font-style: italic; }
+        pre .num { color: #fbbf24; }
+
+        code.inline {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(6, 182, 212, 0.08);
+            color: #67e8f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .back-link { transition: all 0.2s ease; }
+        .back-link:hover { color: #22d3ee; transform: translateX(-2px); }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        .module-card { transition: all 0.3s ease; }
+        .module-card:hover {
+            border-color: rgba(6, 182, 212, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .flow-node {
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            background: rgba(6, 182, 212, 0.05);
+            border-radius: 12px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+        .flow-arrow { color: rgba(6, 182, 212, 0.5); }
+
+        .placeholder-tile {
+            background:
+                repeating-linear-gradient(45deg,
+                    rgba(6, 182, 212, 0.04), rgba(6, 182, 212, 0.04) 10px,
+                    rgba(6, 182, 212, 0.08) 10px, rgba(6, 182, 212, 0.08) 20px);
+            border: 1px dashed rgba(6, 182, 212, 0.25);
+            min-height: 220px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+            .fade-in { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ══════════════════════════════════════════════════ NAV ═══ -->
+<nav class="sticky top-0 z-50 glass border-b border-white/5">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
+        <a href="index.html#projects" class="back-link flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to portfolio</span>
+        </a>
+        <span class="mono text-xs text-gray-600 tracking-widest">CASE STUDY</span>
+    </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════ HERO ═══ -->
+<section class="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+            <span class="text-[10px] px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mono tracking-widest">IN PRODUCTION</span>
+            <span class="text-[10px] px-2.5 py-1 rounded-full bg-white/5 text-gray-500 border border-white/10 mono tracking-widest">TRI VALLEY URGENT CARE</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
+            On<span class="gradient-text">Deck</span>
+        </h1>
+        <p class="text-xl text-gray-400 max-w-3xl leading-relaxed">
+            A clinic shift-scheduling platform that runs the front of house where I work.
+            Students book clinic shifts on a weekly calendar — or photograph their printed
+            schedule and let Claude's vision API extract the shift. Admins approve, enforce
+            capacity, track callouts, and run patient intake off a QR code. Real users,
+            real schedules, every day.
+        </p>
+
+        <div class="flex flex-wrap gap-2 mt-8">
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">Next.js 14</span>
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">TypeScript</span>
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">Supabase (Postgres)</span>
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">Claude Vision OCR</span>
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">JWT (jose)</span>
+            <span class="mono text-xs px-3 py-1.5 rounded-lg bg-white/5 text-gray-300 border border-white/10">Vercel</span>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════ KEY VISUAL ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="max-w-5xl mx-auto">
+        <figure class="glass rounded-2xl overflow-hidden border border-cyan-500/10">
+            <img src="screenshots/ondeck.gif" alt="OnDeck: weekly calendar booking and admin approval flow"
+                 class="w-full h-auto block"
+                 onerror="this.parentElement.classList.add('placeholder-tile'); this.outerHTML='<p class=&quot;mono text-cyan-500/60 text-xs tracking-widest&quot;>DEMO CAPTURE COMING — APP IS LIVE IN PRODUCTION</p>';">
+        </figure>
+        <p class="text-center text-gray-500 text-xs mono mt-4 tracking-widest">
+            BOOKING, APPROVAL, AND INTAKE — CAPTURED WITH DEMO DATA
+        </p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ OVERVIEW ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+        <div class="glass-strong rounded-2xl p-6">
+            <i data-lucide="target" class="w-6 h-6 text-cyan-400 mb-3"></i>
+            <h3 class="text-white font-bold mb-2">The problem</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                Student clinic shifts lived on printed schedules, texts, and front-desk
+                memory. Double-bookings, overcrowded days, and "I told someone I'd be out"
+                callouts had no system of record.
+            </p>
+        </div>
+        <div class="glass-strong rounded-2xl p-6">
+            <i data-lucide="alert-circle" class="w-6 h-6 text-cyan-400 mb-3"></i>
+            <h3 class="text-white font-bold mb-2">The hard part</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                Two very different user populations: students who need 10-second logins on
+                their phones between patients, and admins who need real accounts, audit
+                trails, and control over capacity rules that change with staffing.
+            </p>
+        </div>
+        <div class="glass-strong rounded-2xl p-6">
+            <i data-lucide="check-circle-2" class="w-6 h-6 text-cyan-400 mb-3"></i>
+            <h3 class="text-white font-bold mb-2">The approach</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                One Next.js app, two auth systems, one source of truth in Postgres.
+                Every booking passes a capacity engine with live-tunable limits, and the
+                highest-friction task — transcribing a printed schedule — became a photo upload.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════ ARCHITECTURE ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-10">
+            <p class="mono text-cyan-400/70 text-xs tracking-widest mb-3">ARCHITECTURE</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">One app, two front doors</h2>
+            <div class="neon-line w-24"></div>
+        </div>
+
+        <div class="glass rounded-2xl p-6 md:p-8 mb-10 overflow-x-auto">
+            <div class="flex items-center justify-between gap-3 min-w-[700px]">
+                <div class="flex-1 space-y-3">
+                    <div class="flow-node">
+                        <i data-lucide="smartphone" class="w-5 h-5 text-cyan-400 mx-auto mb-2"></i>
+                        <p class="mono text-[11px] text-cyan-300 tracking-wider">STUDENTS</p>
+                        <p class="text-gray-500 text-[11px] mt-1">ID + 4-digit PIN → JWT (30d)</p>
+                    </div>
+                    <div class="flow-node">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-cyan-400 mx-auto mb-2"></i>
+                        <p class="mono text-[11px] text-cyan-300 tracking-wider">ADMINS</p>
+                        <p class="text-gray-500 text-[11px] mt-1">Supabase Auth (24h)</p>
+                    </div>
+                </div>
+                <i data-lucide="arrow-right" class="flow-arrow w-5 h-5 flex-shrink-0"></i>
+                <div class="flow-node flex-1">
+                    <i data-lucide="layers" class="w-5 h-5 text-cyan-400 mx-auto mb-2"></i>
+                    <p class="mono text-[11px] text-cyan-300 tracking-wider">NEXT.JS API ROUTES</p>
+                    <p class="text-gray-500 text-[11px] mt-1">shifts · approvals · callouts<br>intake · OCR · settings</p>
+                </div>
+                <i data-lucide="arrow-right" class="flow-arrow w-5 h-5 flex-shrink-0"></i>
+                <div class="flex-1 space-y-3">
+                    <div class="flow-node">
+                        <i data-lucide="database" class="w-5 h-5 text-cyan-400 mx-auto mb-2"></i>
+                        <p class="mono text-[11px] text-cyan-300 tracking-wider">SUPABASE</p>
+                        <p class="text-gray-500 text-[11px] mt-1">Postgres + RLS + Storage</p>
+                    </div>
+                    <div class="flow-node">
+                        <i data-lucide="scan-text" class="w-5 h-5 text-cyan-400 mx-auto mb-2"></i>
+                        <p class="mono text-[11px] text-cyan-300 tracking-wider">CLAUDE VISION</p>
+                        <p class="text-gray-500 text-[11px] mt-1">schedule photo → JSON</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="glass module-card rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="key-round" class="w-4 h-4 text-cyan-400"></i>
+                    <span class="mono text-cyan-400 text-xs tracking-widest">DUAL AUTH</span>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Friction proportional to privilege</h4>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    Students sign in with their ID and a 4-digit PIN and get a 30-day
+                    <code class="inline">HS256</code> JWT cookie — fast enough to use between
+                    patients. Admins get real Supabase Auth accounts with 24-hour sessions
+                    and row-level security behind them. Different threat models, different doors.
+                </p>
+            </div>
+            <div class="glass module-card rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="gauge" class="w-4 h-4 text-cyan-400"></i>
+                    <span class="mono text-cyan-400 text-xs tracking-widest">CAPACITY ENGINE</span>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Two rules, live-tunable</h4>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    Every booking checks <code class="inline">max_per_day</code> (per student)
+                    and <code class="inline">max_concurrent</code> (clinic-wide overlap by clock
+                    hour). Limits live in a settings table admins edit in the UI — staffing
+                    changes don't need a deploy. Edits exclude the shift being replaced so
+                    updating shift A never collides with itself.
+                </p>
+            </div>
+            <div class="glass module-card rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="git-pull-request" class="w-4 h-4 text-cyan-400"></i>
+                    <span class="mono text-cyan-400 text-xs tracking-widest">WORKFLOWS</span>
+                </div>
+                <h4 class="text-white font-semibold mb-2">Approvals and callouts</h4>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    Shifts are born <code class="inline">pending</code> and an admin approves or
+                    rejects (or flips on auto-approve). Students call out of approved shifts
+                    with a reason and an optional photo — uploaded to Supabase Storage —
+                    so "I texted someone" became an auditable log.
+                </p>
+            </div>
+            <div class="glass module-card rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="qr-code" class="w-4 h-4 text-cyan-400"></i>
+                    <span class="mono text-cyan-400 text-xs tracking-widest">PATIENT INTAKE</span>
+                </div>
+                <h4 class="text-white font-semibold mb-2">QR-driven front desk</h4>
+                <p class="text-gray-500 text-sm leading-relaxed">
+                    Patients scan a printed QR code and land on a tokenized intake form the
+                    front desk opens on demand — the window only accepts submissions when
+                    staff arm it. Front-desk notes with pinning round out the desk's toolkit.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════ DEEP DIVE: OCR ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-10">
+            <p class="mono text-cyan-400/70 text-xs tracking-widest mb-3">DEEP DIVE</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The schedule photo pipeline</h2>
+            <div class="neon-line w-24"></div>
+        </div>
+
+        <div class="glass rounded-2xl p-8 md:p-10 mb-8">
+            <h3 class="text-xl font-bold text-white mb-4">Meet users where the paper is</h3>
+            <p class="text-gray-400 leading-relaxed mb-4">
+                The clinic's schedules are printed — sometimes handwritten. The original sin of
+                most scheduling tools is demanding retyping. OnDeck's answer: photograph it.
+                The image goes to Claude's vision API with a system prompt that demands strict
+                JSON — date, times, clinic, notes, plus a <code class="inline">confidence</code>
+                grade (<code class="inline">high / medium / low</code>) the UI uses to decide how
+                loudly to ask the student to double-check.
+            </p>
+            <p class="text-gray-400 leading-relaxed">
+                Two production details do the heavy lifting. The system prompt is deliberately
+                long and marked with <code class="inline">cache_control</code>, so Anthropic's
+                prompt caching makes retries and same-day uploads dramatically cheaper. And if
+                no API key is configured, the route returns clearly-labeled demo data instead of
+                failing — the app deploys and runs without an Anthropic account, and real OCR
+                switches on the moment a key appears. No code changes.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <p class="mono text-gray-600 text-xs tracking-widest mb-2">api/ocr/route.ts — the contract, abridged</p>
+        </div>
+<pre><span class="com">// System prompt is stable across requests — mark it for caching.</span>
+<span class="kw">const</span> SYSTEM_PROMPT = <span class="str">`You are an expert clinic schedule parser...
+Return ONLY a valid JSON object with keys:
+date, start_time, end_time, clinic, notes, confidence.
+"high": clear printed text · "medium": partial · "low": blurry/handwritten`</span>;
+
+<span class="com">// Demo-mode guard: no key → labeled sample data, never a crash</span>
+<span class="kw">if</span> (!process.env.ANTHROPIC_API_KEY) {
+  <span class="kw">return</span> NextResponse.json(DEMO_RESULT);   <span class="com">// { ..., demoMode: true }</span>
+}</pre>
+        <p class="text-gray-500 text-xs mt-3 mono">// The client renders a banner when demoMode is true — honest about what's real.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════ DEEP DIVE: AUTH ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-10">
+            <p class="mono text-cyan-400/70 text-xs tracking-widest mb-3">AUTH</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">A PIN is a feature, not a shortcut</h2>
+            <div class="neon-line w-24"></div>
+        </div>
+
+        <p class="text-gray-400 leading-relaxed mb-8 max-w-3xl">
+            Students don't have work email and won't do password resets between patients.
+            So student identity is a custom, server-signed JWT — issued after an ID + PIN
+            check, carried in an HTTP-only cookie for 30 days, verified on every API route.
+            What a student token <em class="text-cyan-300">can't</em> do is the design:
+            it never touches Supabase Auth, holds no row-level privileges, and every
+            privileged operation goes through server routes that check the right token type.
+        </p>
+
+<pre><span class="kw">export async function</span> <span class="fn">signStudentToken</span>(payload) {
+  <span class="kw">return new</span> SignJWT({ ...payload })
+    .setProtectedHeader({ alg: <span class="str">'HS256'</span> })
+    .setIssuedAt()
+    .setExpirationTime(<span class="str">`${TOKEN_TTL_DAYS}d`</span>)
+    .sign(<span class="fn">getSecret</span>());
+}
+
+<span class="com">// Verification never throws into the route — missing/invalid → null → 401</span>
+<span class="kw">export async function</span> <span class="fn">getStudentFromRequest</span>(req) {
+  <span class="kw">const</span> token = req.cookies.get(COOKIE_NAME)?.value;
+  <span class="kw">if</span> (!token) <span class="kw">return null</span>;
+  <span class="kw">try</span> { <span class="kw">return await</span> <span class="fn">verifyStudentToken</span>(token); }
+  <span class="kw">catch</span> { <span class="kw">return null</span>; }
+}</pre>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ TRADEOFFS ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-10">
+            <p class="mono text-cyan-400/70 text-xs tracking-widest mb-3">TRADE-OFFS</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">What I'd do differently</h2>
+            <div class="neon-line w-24"></div>
+        </div>
+
+        <div class="space-y-4">
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="key-round" class="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-white font-semibold mb-1">4-digit PINs are deliberately weak</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            The student PIN trades entropy for adoption — the right call for a
+                            scheduling tool with no patient data behind student tokens, but it
+                            leans on rate limiting and the 30-day cookie. If student accounts ever
+                            gain sensitive scopes, this graduates to TOTP or magic links.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="gauge" class="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-white font-semibold mb-1">Capacity checks read-then-write</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            The engine counts overlapping shifts, then inserts. Two simultaneous
+                            bookings on the last slot could race. Traffic makes it a non-issue
+                            today; at scale this becomes a Postgres constraint or an advisory lock,
+                            not application code.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass rounded-xl p-6">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="scan-text" class="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="text-white font-semibold mb-1">OCR trusts but verifies — manually</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Extracted shifts pre-fill the booking form rather than auto-booking,
+                            with the confidence grade steering the UI. The next step is feeding
+                            corrections back as few-shot examples so accuracy compounds.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ STATUS ═══ -->
+<section class="px-4 sm:px-6 lg:px-8 mb-20">
+    <div class="max-w-5xl mx-auto">
+        <div class="glass-strong rounded-2xl p-8 md:p-10">
+            <div class="flex items-start gap-4">
+                <i data-lucide="activity" class="w-8 h-8 text-cyan-400 flex-shrink-0 mt-1"></i>
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-3">Where it's at</h2>
+                    <p class="text-gray-400 leading-relaxed mb-4">
+                        In production at Tri Valley Urgent Care — students book and call out,
+                        admins approve and tune capacity, and the front desk runs intake off
+                        the printed QR code daily. Deployed on Vercel against Supabase, with
+                        the OCR pipeline live on Anthropic's API.
+                    </p>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        The source is private — it's the clinic's working system. For an
+                        architecture walkthrough or a guided demo with test data,
+                        <a href="mailto:ohaemesiarinze@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">email me</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════════ FOOTER ═══ -->
+<footer class="bg-[#050508] py-10 border-t border-white/5">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <a href="index.html#projects" class="back-link flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to portfolio</span>
+        </a>
+        <p class="text-gray-600 text-xs mono">© 2026 Arinze Ohaemesi</p>
+        <div class="flex items-center gap-4">
+            <a href="https://github.com/Arinzayyy" target="_blank" class="text-gray-600 hover:text-cyan-400 transition-colors">
+                <i data-lucide="github" class="w-5 h-5"></i>
+            </a>
+            <a href="https://linkedin.com/in/arinze-ohaemesi-1667a426b" target="_blank" class="text-gray-600 hover:text-cyan-400 transition-colors">
+                <i data-lucide="linkedin" class="w-5 h-5"></i>
+            </a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    lucide.createIcons();
+
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) e.target.classList.add('visible');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+</script>
+
+<!-- ── Vercel Web Analytics ── -->
+<script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
+</body>
+</html>

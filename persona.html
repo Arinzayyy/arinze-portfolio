@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PERSONA MODE — Arinze.exe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+/* ─── TOKENS ─── */
+:root{
+  --red:    #E60012;
+  --red-dk: #7A0008;
+  --black:  #080808;
+  --white:  #F5F0E8;
+  --gold:   #C9A85C;
+  --yellow: #FFD23F;
+  --sp: 8px;
+}
+
+html,body{width:100%;height:100%;background:var(--black);color:var(--white);overflow:hidden;}
+
+/* ─── BACKGROUND LAYERS ─── */
+.bg-image{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:url('persona5background.webp') center/cover no-repeat;
+}
+/* Directional overlay: darker on menu side, slightly lighter on portrait side */
+.bg-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(
+    105deg,
+    rgba(0,0,0,0.78) 0%,
+    rgba(8,2,2,0.74) 38%,
+    rgba(4,0,0,0.82) 65%,
+    rgba(0,0,0,0.85) 100%
+  );
+}
+/* Red-multiply diagonal tint */
+.bg-red-tint{
+  position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(
+    135deg,
+    rgba(230,0,18,0.04) 0%,
+    transparent 40%,
+    rgba(230,0,18,0.06) 100%
+  );
+}
+/* CRT scanlines */
+.bg-scan{
+  position:fixed;inset:0;pointer-events:none;z-index:3;
+  background-image:repeating-linear-gradient(
+    0deg,transparent,transparent 3px,
+    rgba(255,60,60,0.06) 3px,rgba(255,60,60,0.06) 4px
+  );
+}
+/* Halftone dots — subtle texture in right zone */
+.bg-halftone{
+  position:fixed;inset:0;pointer-events:none;z-index:3;
+  background-image:radial-gradient(circle,rgba(230,0,18,0.22) 1px,transparent 1px);
+  background-size:14px 14px;
+  background-position:0 0;
+  opacity:0.35;
+  mask-image:linear-gradient(to left,rgba(0,0,0,0.7) 0%,transparent 55%);
+  -webkit-mask-image:linear-gradient(to left,rgba(0,0,0,0.7) 0%,transparent 55%);
+}
+/* Film grain */
+.bg-noise{
+  position:fixed;inset:0;pointer-events:none;z-index:3;
+  opacity:0.055;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:256px;
+}
+/* Vignette */
+.bg-vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:4;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 45%,rgba(0,0,0,0.75) 100%);
+}
+
+/* ─── FIXED HUD CORNERS ─── */
+.hud-tl{
+  position:fixed;top:18px;left:22px;z-index:20;
+  font-family:'JetBrains Mono',monospace;
+  font-size:7px;letter-spacing:.30em;text-transform:uppercase;
+  color:rgba(245,240,232,0.28);line-height:1.9;
+  opacity:0;pointer-events:none;
+}
+.hud-tr{
+  position:fixed;top:18px;right:22px;z-index:20;
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(.7rem,1.2vw,.95rem);
+  letter-spacing:.12em;color:rgba(245,240,232,0.22);
+  text-align:right;transform:skewX(-8deg);
+  opacity:0;pointer-events:none;
+}
+.hud-br{
+  position:fixed;bottom:60px;right:22px;z-index:20;
+  font-family:'JetBrains Mono',monospace;
+  font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(245,240,232,0.18);text-align:right;line-height:1.8;
+  opacity:0;pointer-events:none;
+}
+
+/* ─── SCREEN GRID ─── */
+.screen{
+  position:relative;z-index:5;
+  width:100vw;height:100vh;
+  display:grid;
+  grid-template-columns:56fr 44fr;
+  grid-template-rows:1fr 50px;
+}
+
+/* ─── HERO COLUMN ─── */
+.hero-col{
+  grid-column:1;grid-row:1;
+  display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:center;
+  padding:1.5rem 0 1.5rem 1.5rem;
+  position:relative;
+}
+
+/* Decorative star accent top-left */
+.accent-star{
+  position:absolute;top:1.8rem;left:2.5rem;
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:2.8rem;color:var(--red);
+  opacity:0.65;line-height:1;
+  transform:skewX(-10deg);
+  pointer-events:none;
+  text-shadow:2px 2px 0 rgba(0,0,0,0.6);
+  opacity:0;
+}
+
+/* Diagonal hard-edge strip behind the portrait */
+.hero-col::after{
+  content:'';
+  position:absolute;right:-1px;top:0;bottom:0;width:3px;
+  background:linear-gradient(to bottom,transparent 10%,rgba(230,0,18,0.45) 40%,rgba(230,0,18,0.45) 60%,transparent 90%);
+  pointer-events:none;z-index:2;
+}
+
+.img-wrapper{
+  position:relative;display:block;
+  width:50vw;
+  aspect-ratio:3/2;
+  filter:
+    drop-shadow(0 0 2px var(--red))
+    drop-shadow(0 0 28px rgba(230,0,18,0.55))
+    drop-shadow(0 0 60px rgba(120,0,8,0.32));
+  will-change:transform,filter;
+}
+
+/* Dark-red outer rim — offsets behind the clip */
+.img-outer-rim{
+  position:absolute;inset:-4px;
+  clip-path:polygon(0 0,87% 0,100% 13%,100% 100%,8% 100%,0 87%);
+  background:var(--red-dk);
+  z-index:0;opacity:0.55;
+}
+.img-clip{
+  position:relative;z-index:1;
+  clip-path:polygon(0 0,88% 0,100% 12%,100% 100%,7% 100%,0 88%);
+  overflow:hidden;width:100%;height:100%;
+}
+.img-clip img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:center center;
+  display:block;will-change:transform;
+}
+/* Traced red border on top */
+.img-clip::after{
+  content:'';
+  position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 2.5px rgba(230,0,18,0.88);
+  z-index:2;
+}
+
+/* Arcana label */
+.arcana-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:.38em;text-transform:uppercase;
+  color:var(--gold);margin-top:6px;
+  opacity:0;
+}
+
+/* Hero tagline */
+.hero-tagline{
+  align-self:flex-start;
+  margin-top:1.2rem;
+  padding:.55rem 1.4rem .55rem .9rem;
+  opacity:0;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-left:3px solid var(--red);
+  /* Arrow-right angular right edge */
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%);
+  position:relative;z-index:3;
+}
+.tagline-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:6.5px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold);display:block;margin-bottom:5px;
+}
+.tagline-text{
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(1.05rem,2vw,1.5rem);
+  letter-spacing:.04em;line-height:1.05;
+  color:var(--white);display:block;
+  transform:skewX(-7deg);transform-origin:left center;
+  text-shadow:2px 2px 0 rgba(230,0,18,0.9),4px 4px 0 rgba(0,0,0,0.7);
+}
+
+/* ─── MENU COLUMN ─── */
+.menu-col{
+  grid-column:2;grid-row:1;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:0 2.8rem 0 2rem;
+  position:relative;
+  overflow:hidden;
+  /* Thin red accent on left edge */
+  border-left:2px solid rgba(230,0,18,0.18);
+}
+
+/* Side indicator dots */
+.side-dots{
+  position:absolute;right:.55rem;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:7px;
+  opacity:0;
+}
+.side-dot{
+  width:3px;height:3px;border-radius:50%;
+  background:rgba(201,168,92,0.18);
+  transition:background .2s,box-shadow .2s;
+}
+.side-dot.lit{background:var(--gold);box-shadow:0 0 7px rgba(201,168,92,0.75);}
+
+/* Menu header */
+.menu-wrap{display:flex;flex-direction:column;}
+
+.menu-eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:7.5px;letter-spacing:.38em;text-transform:uppercase;
+  color:rgba(201,168,92,0.48);margin-bottom:3px;
+  opacity:0;
+}
+
+#menu-title{
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(1.9rem,3.6vw,2.8rem);
+  letter-spacing:.06em;color:var(--white);
+  transform:skewX(-9deg);transform-origin:left center;
+  display:inline-block;opacity:0;
+  text-shadow:3px 3px 0 rgba(0,0,0,0.85),-1px -1px 0 rgba(230,0,18,0.35);
+  line-height:1;
+}
+
+/* Rule with arrow tip */
+#menu-rule{
+  width:60px;height:3px;
+  background:var(--red);
+  margin:8px 0 1.5rem;
+  transform-origin:left center;transform:scaleX(0);opacity:0;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,0 100%);
+}
+
+/* ═══════════════════════════════════════════
+   MENU ITEMS — core P5 parallelogram design
+   ═══════════════════════════════════════════ */
+.menu-list{list-style:none;overflow:visible;}
+
+.menu-item{
+  position:relative;
+  /* The whole block is a parallelogram */
+  transform:skewX(-10deg);
+  transform-origin:left center;
+  cursor:pointer;
+  outline:none;
+  margin-bottom:3px;
+  /* Entrance hidden state */
+  opacity:0;
+  transition:filter .15s;
+}
+
+/* ── THE RED SLAB ──
+   Extends beyond the item on both sides for the P5 "overshoots" look.
+   Parent skewX(-10deg) makes it render as a parallelogram automatically. */
+.menu-item::before{
+  content:'';
+  position:absolute;
+  top:0;bottom:0;
+  left:-22px;     /* bleed left */
+  right:-34px;    /* bleed right — wider overshoot */
+  background:var(--red);
+  transform:translateX(-110%);
+  transition:transform .20s cubic-bezier(0.76,0,.24,1);
+  z-index:0;
+}
+.menu-item:hover::before,
+.menu-item.focused::before{transform:translateX(0);}
+
+/* Focused: red glow drop-shadow around the slab */
+.menu-item.focused{
+  filter:drop-shadow(0 2px 10px rgba(230,0,18,0.55));
+}
+
+/* ── INNER CONTENT — counter-skew to keep text upright ── */
+.item-inner{
+  transform:skewX(10deg);
+  display:flex;align-items:center;
+  padding:.48rem .5rem .48rem .3rem;
+  position:relative;z-index:1;
+}
+
+/* Yellow slash — left-edge indicator */
+.item-slash{
+  position:absolute;left:0;top:-10%;height:120%;
+  width:5px;
+  background:var(--yellow);
+  /* No extra skewX since parent already skewed */
+  transform:translateX(-280%);
+  transition:transform .18s cubic-bezier(0.76,0,.24,1) .03s;
+  z-index:2;
+  box-shadow:0 0 10px rgba(255,210,63,.75),2px 0 8px rgba(230,0,18,.85);
+  pointer-events:none;
+}
+.menu-item.focused .item-slash,
+.menu-item:hover   .item-slash{transform:translateX(0);}
+
+/* Chevron arrow */
+.item-chevron{
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(1.25rem,2.2vw,1.7rem);color:var(--yellow);
+  width:1.7rem;flex-shrink:0;
+  opacity:0;position:relative;z-index:1;
+  transition:color .15s,opacity .15s;
+  line-height:1;
+}
+.menu-item.focused .item-chevron{opacity:1;}
+.menu-item:hover   .item-chevron{opacity:1;color:var(--black);}
+
+/* Main label — big, heavy, hard shadow */
+.item-label{
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(2.1rem,4.6vw,3.4rem);
+  letter-spacing:.04em;
+  color:rgba(245,240,232,0.80);
+  line-height:1;display:inline-block;
+  position:relative;z-index:1;
+  transition:color .15s,text-shadow .15s;
+  text-shadow:3px 3px 0 rgba(0,0,0,0.75);
+  -webkit-text-stroke:.5px rgba(245,240,232,0.18);
+}
+.menu-item.focused .item-label,
+.menu-item:hover   .item-label{
+  color:#ffffff;
+  text-shadow:2px 2px 0 rgba(0,0,0,0.95),0 0 20px rgba(255,255,255,0.1);
+  -webkit-text-stroke:0;
+}
+
+/* Secondary hint label */
+.item-hint{
+  font-family:'JetBrains Mono',monospace;
+  font-size:7px;letter-spacing:.16em;
+  color:rgba(245,240,232,0.16);
+  margin-left:.5rem;align-self:flex-end;padding-bottom:6px;
+  position:relative;z-index:1;
+  transition:color .15s;
+  text-transform:uppercase;
+}
+.menu-item:hover   .item-hint{color:rgba(0,0,0,0.35);}
+.menu-item.focused .item-hint{color:rgba(245,240,232,0.45);}
+
+/* Item number */
+.item-num{
+  margin-left:auto;padding-right:.5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:.08em;
+  color:rgba(245,240,232,0.12);
+  position:relative;z-index:1;
+  transition:color .15s;
+}
+.menu-item:hover   .item-num{color:rgba(0,0,0,0.28);}
+.menu-item.focused .item-num{color:rgba(245,240,232,0.36);}
+
+/* ─── JITTER — triggered by JS adding .jittering class ─── */
+@keyframes jitter{
+  0%  {transform:skewX(10deg) translate(0,0);}
+  18% {transform:skewX(10deg) translate(1px,-1px);}
+  36% {transform:skewX(10deg) translate(-1px,0px);}
+  54% {transform:skewX(10deg) translate(1.5px,1px);}
+  72% {transform:skewX(10deg) translate(-1px,-0.5px);}
+  90% {transform:skewX(10deg) translate(0.5px,0.5px);}
+  100%{transform:skewX(10deg) translate(0,0);}
+}
+.menu-item.jittering .item-inner{
+  animation:jitter 180ms ease-in-out 1;
+}
+
+/* ─── CONFIRM FLASH ─── */
+@keyframes confirmFlash{
+  0%  {background:transparent;}
+  40% {background:rgba(230,0,18,0.35);}
+  100%{background:transparent;}
+}
+.confirm-flash::after{
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:9998;
+  animation:confirmFlash 200ms ease-out forwards;
+}
+
+/* ─── GLITCH ON CORNER TITLE ─── */
+@keyframes glitchTitle{
+  0%,88%,100%{clip-path:none;transform:skewX(-8deg);color:rgba(245,240,232,0.22);}
+  89%{clip-path:polygon(0 20%,100% 20%,100% 22%,0 22%);transform:skewX(-8deg) translateX(-2px);color:var(--red);}
+  90%{clip-path:polygon(0 55%,100% 55%,100% 58%,0 58%);transform:skewX(-8deg) translateX(1px);}
+  91%{clip-path:none;transform:skewX(-8deg);}
+  92%{clip-path:polygon(0 72%,100% 72%,100% 74%,0 74%);transform:skewX(-8deg) translateX(-1px);}
+  93%{clip-path:none;transform:skewX(-8deg);}
+}
+.hud-tr{animation:glitchTitle 12s ease-in-out 3.5s infinite;}
+
+/* ─── CMD BAR ─── */
+.cmd-bar{
+  grid-column:1/-1;grid-row:2;
+  display:flex;align-items:center;gap:2rem;padding:0 1.6rem;
+  background:rgba(230,0,18,0.03);
+  border-top:1px solid rgba(230,0,18,0.12);
+  position:relative;z-index:6;
+}
+.cmd-item{
+  display:flex;align-items:center;gap:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:8px;letter-spacing:.14em;
+  color:rgba(245,240,232,0.45);text-transform:uppercase;
+}
+.cmd-key{
+  background:rgba(245,240,232,0.04);
+  border:1px solid rgba(245,240,232,0.09);
+  padding:2px 6px;font-size:7px;
+  clip-path:polygon(0 0,calc(100% - 4px) 0,100% 4px,100% 100%,4px 100%,0 calc(100% - 4px));
+  font-family:'JetBrains Mono',monospace;
+}
+#exit-btn{
+  margin-left:auto;color:rgba(201,168,92,0.55);
+  cursor:pointer;transition:color .2s,text-shadow .2s;
+}
+#exit-btn:hover{color:var(--gold);text-shadow:0 0 10px rgba(201,168,92,0.4);}
+#exit-btn .cmd-key{border-color:rgba(201,168,92,0.22);background:rgba(201,168,92,0.04);}
+
+/* ─── EXIT WIPE ─── */
+#exit-wipe{
+  position:fixed;inset:0;z-index:9999;
+  display:none;pointer-events:none;
+}
+#exit-wipe.ew-active{display:block;pointer-events:all;}
+.ew-bar{position:absolute;inset:0;transform:translateX(-105%);}
+.ew-bar-1{z-index:1;}
+.ew-bar-2{z-index:2;}
+.ew-bar-3{z-index:3;}
+.ew-text{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:10;opacity:0;pointer-events:none;text-align:center;
+}
+.ew-small{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(8px,1vw,11px);letter-spacing:.35em;text-transform:uppercase;
+  color:rgba(245,240,232,0.55);margin-bottom:12px;
+}
+.ew-big{
+  font-family:'Anton',sans-serif;font-style:italic;
+  font-size:clamp(64px,10vw,168px);
+  letter-spacing:.04em;line-height:0.9;color:#F5F0E8;
+  text-shadow:4px 4px 0 #E60012,8px 8px 0 rgba(0,0,0,0.5);
+  transform:skewX(-8deg);display:inline-block;
+}
+.ew-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(9px,1.1vw,13px);letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(245,240,232,0.45);margin-top:14px;
+}
+
+/* ─── MOBILE ─── */
+@media(max-width:700px){
+  html,body{overflow-y:auto;overflow-x:hidden;}
+  .screen{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto 50px;
+    height:auto;min-height:100vh;
+  }
+  .hero-col{
+    grid-column:1;grid-row:1;
+    padding:1.4rem 1.2rem;max-height:62vh;
+  }
+  .img-wrapper{width:min(96%,60vw);aspect-ratio:3/2;}
+  .menu-col{
+    grid-column:1;grid-row:2;
+    padding:1.4rem 1.2rem;
+    justify-content:flex-start;
+    border-left:none;border-top:1px solid rgba(230,0,18,0.1);
+  }
+  .hud-tl,.hud-tr,.hud-br,.side-dots{display:none;}
+  .bg-image{background-attachment:scroll;}
+  .cmd-bar{grid-column:1;grid-row:3;}
+  .menu-item{opacity:1!important;}
+  #menu-title{opacity:1!important;}
+  #menu-rule{opacity:1!important;transform:scaleX(1)!important;}
+  .menu-eyebrow{opacity:1!important;}
+  .accent-star{display:none;}
+}
+
+/* ─── REDUCED MOTION ─── */
+@media(prefers-reduced-motion:reduce){
+  .menu-item.jittering .item-inner{animation:none;}
+  .menu-item::before{transition:none;}
+  .item-slash{transition:none;}
+  .hud-tr{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Background layers ── -->
+<div class="bg-image"></div>
+<div class="bg-overlay"></div>
+<div class="bg-red-tint"></div>
+<div class="bg-scan"></div>
+<div class="bg-halftone"></div>
+<div class="bg-noise"></div>
+<div class="bg-vignette"></div>
+
+<!-- ── Fixed HUD corners ── -->
+<div class="hud-tl" id="hud-tl">PORTFOLIO<br>// 2026</div>
+<div class="hud-tr" id="hud-tr">PORTFOLIO // 2026</div>
+<div class="hud-br" id="hud-br">SYS_V1.04<br>NODE — CH 06</div>
+
+<!-- ── Decorative star ── -->
+<div class="accent-star" id="accent-star">★</div>
+
+<div class="screen">
+
+  <!-- ─── HERO COLUMN ─── -->
+  <div class="hero-col" id="hero-col">
+    <div class="img-wrapper" id="img-wrapper">
+      <div class="img-outer-rim"></div>
+      <div class="img-clip">
+        <img src="persona-protagonist.webp"
+             alt="Arinze Ohaemesi — The Strategist"
+             id="hero-img"
+             onerror="this.style.opacity='.15'">
+      </div>
+    </div>
+    <p class="arcana-label" id="arcana-label">ARCANA · THE STRATEGIST</p>
+    <div class="hero-tagline" id="hero-tagline">
+      <span class="tagline-label">// CODE OF CONDUCT</span>
+      <span class="tagline-text">EVERY DAY IS<br>AN INVESTMENT.</span>
+    </div>
+  </div>
+
+  <!-- ─── MENU COLUMN ─── -->
+  <div class="menu-col">
+
+    <div class="side-dots" id="side-dots">
+      <div class="side-dot"></div>
+      <div class="side-dot"></div>
+      <div class="side-dot"></div>
+      <div class="side-dot"></div>
+      <div class="side-dot"></div>
+      <div class="side-dot"></div>
+    </div>
+
+    <div class="menu-wrap">
+      <p class="menu-eyebrow" id="menu-eyebrow">// SYSTEM MENU</p>
+      <div id="menu-title">MAIN MENU</div>
+      <div id="menu-rule"></div>
+
+      <ul class="menu-list" id="menu-list">
+
+        <li class="menu-item" data-sfx="off" data-key="HOME" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">HOME</span>
+            <span class="item-hint">PROFILE</span>
+            <span class="item-num">01</span>
+          </div>
+        </li>
+
+        <li class="menu-item" data-sfx="off" data-key="WORK" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">WORK</span>
+            <span class="item-hint">PROJECTS</span>
+            <span class="item-num">02</span>
+          </div>
+        </li>
+
+        <li class="menu-item" data-sfx="off" data-key="ABOUT" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">ABOUT</span>
+            <span class="item-hint">INFO</span>
+            <span class="item-num">03</span>
+          </div>
+        </li>
+
+        <li class="menu-item" data-sfx="off" data-key="JOURNAL" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">JOURNAL</span>
+            <span class="item-hint">EXPERIENCE</span>
+            <span class="item-num">04</span>
+          </div>
+        </li>
+
+        <li class="menu-item" data-sfx="off" data-key="CONTACT" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">CONTACT</span>
+            <span class="item-hint">LINK</span>
+            <span class="item-num">05</span>
+          </div>
+        </li>
+
+        <li class="menu-item" data-sfx="off" data-key="SYSTEM" tabindex="0">
+          <div class="item-slash"></div>
+          <div class="item-inner">
+            <span class="item-chevron">›</span>
+            <span class="item-label">SYSTEM</span>
+            <span class="item-hint">SKILLS</span>
+            <span class="item-num">06</span>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── COMMAND BAR ─── -->
+  <div class="cmd-bar">
+    <div class="cmd-item">
+      <span class="cmd-key">↑↓</span><span>NAVIGATE</span>
+    </div>
+    <div class="cmd-item">
+      <span class="cmd-key">ENTER</span><span>CONFIRM</span>
+    </div>
+    <div class="cmd-item" id="exit-btn" data-sfx="cancel" role="button" tabindex="0" aria-label="Exit Persona Mode">
+      <span class="cmd-key">ESC</span><span>EXIT MODE</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Exit wipe overlay -->
+<div id="exit-wipe">
+  <div class="ew-bar ew-bar-1"></div>
+  <div class="ew-bar ew-bar-2"></div>
+  <div class="ew-bar ew-bar-3"></div>
+  <div class="ew-text" id="ew-text">
+    <div class="ew-small">// SELECTION CONFIRMED</div>
+    <div class="ew-big" id="ew-big">HOME</div>
+    <div class="ew-sub" id="ew-sub">ホーム ・ LOADED</div>
+  </div>
+</div>
+
+<script>
+  // ─── NAV MAP ────────────────────────────────────────────────
+  const NAV_MAP = {
+    HOME:    'persona.html',
+    WORK:    'persona-work.html',
+    ABOUT:   'persona-about.html',
+    JOURNAL: 'persona-journal.html',
+    CONTACT: 'persona-contact.html',
+    SYSTEM:  'persona-system.html',
+  };
+
+  const JP_MAP = {
+    HOME:    'ホーム',
+    WORK:    'ワーク',
+    ABOUT:   'プロフィール',
+    JOURNAL: 'ジャーナル',
+    CONTACT: 'コンタクト',
+    SYSTEM:  'システム',
+  };
+
+  const items    = Array.from(document.querySelectorAll('.menu-item'));
+  const dots     = Array.from(document.querySelectorAll('.side-dot'));
+  const exitWipe = document.getElementById('exit-wipe');
+  const exitBtn  = document.getElementById('exit-btn');
+  const ewBars   = exitWipe.querySelectorAll('.ew-bar');
+  const ewText   = document.getElementById('ew-text');
+  const ewBig    = document.getElementById('ew-big');
+  const ewSub    = document.getElementById('ew-sub');
+  let focusIdx   = 0;
+  let busy       = false;
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ─── FOCUS TRACKING ─────────────────────────────────────────
+  function setFocus(idx) {
+    items.forEach((el, i) => el.classList.toggle('focused', i === idx));
+    dots.forEach((d, i)   => d.classList.toggle('lit',     i === idx));
+    focusIdx = idx;
+  }
+  setFocus(0);
+
+  // ─── HOVER JITTER (one-shot CSS animation) ──────────────────
+  items.forEach((item, i) => {
+    item.addEventListener('mouseenter', () => {
+      if (busy || prefersReduced) return;
+      setFocus(i);
+      item.classList.remove('jittering');
+      // Force reflow to restart the animation
+      void item.offsetWidth;
+      item.classList.add('jittering');
+    });
+    item.addEventListener('animationend', () => {
+      item.classList.remove('jittering');
+    });
+  });
+
+  // ─── CONFIRM FLASH ──────────────────────────────────────────
+  function flashConfirm(item, cb) {
+    window.personaSFX?.play('confirm');
+    if (prefersReduced) { cb(); return; }
+    const tl = gsap.timeline({ onComplete: cb });
+    tl.to(item, { scaleX: 1.03, scaleY: 0.94, transformOrigin:'left center',
+                   duration: 0.06, ease:'power2.out' })
+      .to(item, { scaleX: 1, scaleY: 1, duration: 0.14, ease:'elastic.out(1,0.6)' });
+    // Screen flash
+    const flash = document.createElement('div');
+    flash.className = 'confirm-flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 300);
+  }
+
+  // ─── WIPE TRANSITION ────────────────────────────────────────
+  function triggerExitWipe(dest, style, key) {
+    if (busy) return;
+    busy = true;
+    window.personaSFX?.play('whoosh');
+    if (style === 'exit') {
+      ewBars[0].style.background = '#f5f0e8';
+      ewBars[1].style.background = '#e60012';
+      ewBars[2].style.background = '#080808';
+      ewBig.textContent = 'PORTFOLIO';
+      ewSub.textContent = 'クラシック ・ RESTORING';
+    } else {
+      ewBars[0].style.background = '#e60012';
+      ewBars[1].style.background = '#c9a85c';
+      ewBars[2].style.background = '#080808';
+      if (key) {
+        ewBig.textContent = key.toUpperCase();
+        ewSub.textContent = (JP_MAP[key] || '') + ' ・ LOADED';
+      }
+    }
+    exitWipe.classList.add('ew-active');
+    gsap.set(ewText, { opacity: 0 });
+    const tl = gsap.timeline({ onComplete: () => { window.location.href = dest; } });
+    tl.fromTo(ewBars[0], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'})
+      .fromTo(ewBars[1], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'}, '-=0.22')
+      .fromTo(ewBars[2], {x:'-105%'}, {duration:0.36,x:'0%',ease:'power3.inOut'}, '-=0.22')
+      .to(ewText, {opacity:1, duration:0.22, ease:'power2.out'}, '+=0.04')
+      .to({}, {duration:0.38});
+  }
+
+  // ─── SELECT ITEM ────────────────────────────────────────────
+  function selectItem(item) {
+    if (busy) return;
+    const dest = NAV_MAP[item.dataset.key];
+    if (!dest) return;
+    flashConfirm(item, () => triggerExitWipe(dest, 'menu', item.dataset.key));
+  }
+
+  // ─── EVENT LISTENERS ────────────────────────────────────────
+  items.forEach((item, i) => {
+    item.addEventListener('click', () => selectItem(item));
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectItem(item); }
+    });
+  });
+
+  exitBtn.addEventListener('click',   () => triggerExitWipe('index.html', 'exit'));
+  exitBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerExitWipe('index.html', 'exit'); }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (busy) return;
+    if (e.key === 'Escape')    { triggerExitWipe('index.html', 'exit'); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setFocus((focusIdx + 1) % items.length); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setFocus((focusIdx - 1 + items.length) % items.length); }
+    if (e.key === 'Enter')     {
+      const r = items[focusIdx].getBoundingClientRect();
+      window.personaSFX?.burst(r.left + r.width / 2, r.top + r.height / 2);
+      selectItem(items[focusIdx]);
+    }
+  });
+
+  // ─── POINTER PARALLAX ───────────────────────────────────────
+  (function initParallax() {
+    if (prefersReduced) return;
+    const heroImg = document.getElementById('hero-img');
+    let raf = null;
+    document.addEventListener('mousemove', (e) => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const rx = (e.clientX / window.innerWidth  - 0.5) * 2;
+        const ry = (e.clientY / window.innerHeight - 0.5) * 2;
+        gsap.to(heroImg, { x:rx*9, y:ry*6, duration:1.4, ease:'power2.out', overwrite:'auto' });
+      });
+    });
+  })();
+
+  // ─── ENTRY ANIMATION ────────────────────────────────────────
+  (function runEntry() {
+    // ── Instant show for reduced-motion users
+    if (prefersReduced) {
+      gsap.set(['#img-wrapper','#arcana-label','#hero-tagline',
+                '#hud-tl','#hud-tr','#hud-br','#accent-star',
+                '#menu-eyebrow','#menu-title','#menu-rule','#side-dots'],
+               { opacity:1, x:0, y:0, scale:1, scaleX:1 });
+      items.forEach(el => gsap.set(el, { opacity:1 }));
+      return;
+    }
+
+    // Initial states
+    gsap.set('#img-wrapper',   { opacity:0, scale:0.93, x:-36 });
+    gsap.set('#arcana-label',  { opacity:0, y:10 });
+    gsap.set('#hero-tagline',  { opacity:0, x:-28 });
+    gsap.set('#accent-star',   { opacity:0, x:-18 });
+    gsap.set('#hud-tl',        { opacity:0, x:-14 });
+    gsap.set('#hud-tr',        { opacity:0, x:14 });
+    gsap.set('#hud-br',        { opacity:0, x:14 });
+    gsap.set('#menu-eyebrow',  { opacity:0 });
+    gsap.set('#menu-title',    { opacity:0, x:24 });
+    gsap.set('#menu-rule',     { opacity:0, scaleX:0 });
+    gsap.set('#side-dots',     { opacity:0 });
+    items.forEach(el => gsap.set(el, { opacity:0, x:72 }));
+
+    const tl = gsap.timeline();
+
+    // Left side slides in (hero portrait + tagline)
+    tl.to('#img-wrapper',  { opacity:1, scale:1, x:0,
+                              duration:0.72, ease:'power3.out' }, 0.08)
+      .to('#accent-star',  { opacity:0.65, x:0,
+                              duration:0.4,  ease:'power2.out' }, 0.28)
+      .to('#hero-tagline', { opacity:1, x:0,
+                              duration:0.5,  ease:'back.out(1.4)' }, 0.45)
+      .to('#arcana-label', { opacity:1, y:0,
+                              duration:0.4,  ease:'power2.out' }, 0.6)
+
+    // HUD corners snap in
+      .to('#hud-tl',       { opacity:1, x:0, duration:0.3, ease:'power2.out' }, 0.32)
+      .to('#hud-tr',       { opacity:1, x:0, duration:0.3, ease:'power2.out' }, 0.38)
+      .to('#hud-br',       { opacity:1, x:0, duration:0.3, ease:'power2.out' }, 0.44)
+
+    // Menu header
+      .to('#menu-eyebrow', { opacity:1,              duration:0.3, ease:'power2.out' }, 0.52)
+      .to('#menu-title',   { opacity:1, x:0,         duration:0.4, ease:'power3.out' }, 0.60)
+      .to('#menu-rule',    { opacity:1, scaleX:1,    duration:0.5, ease:'power3.out' }, 0.74)
+
+    // Menu items slide from RIGHT with overshoot stagger
+      .to(items, {
+          opacity:1, x:0,
+          duration:0.45, stagger:0.07,
+          ease:'back.out(1.6)'
+        }, 0.86)
+
+    // Side dots
+      .to('#side-dots',    { opacity:1, duration:0.3, ease:'power2.out' }, 1.40);
+  })();
+</script>
+<script src="persona-sfx.js"></script>
+</body>
+</html>

@@ -4,11 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arinze Ohaemesi | Backend Engineer & Systems Developer</title>
+    <meta name="description" content="Backend engineer building cloud-hosted APIs, AI-powered tools, and robust infrastructure. Python · FastAPI · PostgreSQL · AWS · LLM integration. Based in Tracy, CA.">
+    <meta name="author" content="Arinze Ohaemesi">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Arinze Ohaemesi | Backend Engineer & Systems Developer">
+    <meta property="og:description" content="Backend engineer building cloud-hosted APIs, AI-powered tools, and robust infrastructure. Python · FastAPI · PostgreSQL · AWS.">
+    <meta property="og:url" content="https://arinze-ohaemesi.vercel.app">
+    <meta property="og:image" content="https://arinze-ohaemesi.vercel.app/screenshots/hero.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Arinze Ohaemesi | Backend Engineer">
+    <meta name="twitter:description" content="Backend engineering · AI integration · Cloud infrastructure.">
+    <meta name="twitter:image" content="https://arinze-ohaemesi.vercel.app/screenshots/hero.png">
+    <meta name="theme-color" content="#080810">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080810'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='32' font-weight='900' text-anchor='middle' fill='%23ef4444'%3EAO%3C/text%3E%3C/svg%3E">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.469.0"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -257,6 +270,75 @@
             background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(239,68,68,0.06), transparent);
         }
 
+        /* ── Scroll progress bar ── */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            z-index: 60;
+            box-shadow: 0 0 8px rgba(239,68,68,0.6);
+        }
+
+        /* ── Active nav link ── */
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 100%;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.25s ease;
+        }
+        .nav-link:hover::after { transform: scaleX(0.5); }
+        .nav-link.nav-active { color: #f87171; }
+        .nav-link.nav-active::after { transform: scaleX(1); }
+
+        /* ── Back to top ── */
+        #back-to-top {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fca5a5;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.3);
+            backdrop-filter: blur(16px);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            z-index: 45;
+        }
+        #back-to-top.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        #back-to-top:hover { background: rgba(239,68,68,0.18); transform: translateY(-2px); }
+
+        /* ── Selection color ── */
+        ::selection { background: rgba(239,68,68,0.35); color: #fff; }
+
+        /* ── Reduced motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .fade-in { opacity: 1; transform: none; }
+        }
+
         @keyframes slideIn {
             from { opacity:0; transform: translateY(20px); }
             to { opacity:1; transform: translateY(0); }
@@ -461,9 +543,126 @@
             transition: transform 0.5s ease;
         }
         .group:hover .proj-img img { transform: scale(1.05); }
+
+        /* ── Persona Mode toggle button ── */
+        #persona-toggle-btn,
+        #persona-toggle-mobile {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+            padding: 7px 16px 7px 10px;
+            cursor: pointer;
+            transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease,
+                        box-shadow 0.25s ease, transform 0.25s ease;
+            white-space: nowrap;
+            line-height: 1;
+        }
+        #persona-toggle-btn:hover,
+        #persona-toggle-mobile:hover {
+            color: #f5f3ef;
+            background: rgba(220, 38, 38, 0.08);
+            border-color: rgba(220, 38, 38, 0.55);
+            box-shadow: 0 0 14px rgba(220, 38, 38, 0.22);
+            transform: translateY(-1px);
+        }
+        #persona-toggle-btn:disabled,
+        #persona-toggle-mobile:disabled { pointer-events: none; opacity: 0.5; }
+        .persona-btn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+            flex-shrink: 0;
+            animation: pBtnPulse 1.6s ease-in-out infinite;
+        }
+        #persona-toggle-btn:hover .persona-btn-dot,
+        #persona-toggle-mobile:hover .persona-btn-dot {
+            background: #fbbf24;
+            animation: none;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+        }
+        @keyframes pBtnPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(239, 68, 68, 0.8); }
+            50%       { opacity: 0.4; box-shadow: none; }
+        }
+
+        /* ── Persona Wipe Overlay ── */
+        #persona-wipe {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: none;
+            pointer-events: none;
+        }
+        #persona-wipe.pw-active {
+            display: block;
+            pointer-events: all;
+        }
+        .pw-bar {
+            position: absolute;
+            inset: 0;
+        }
+        .pw-bar-1 { background: #dc2626; z-index: 1; }
+        .pw-bar-2 { background: #c9a85c; z-index: 2; }
+        .pw-bar-3 { background: #0a0a0a; z-index: 3; }
+        @keyframes pwBarIn {
+            from { transform: translateX(105%); }
+            to   { transform: translateX(0%); }
+        }
+        .pw-bar { transform: translateX(105%); }
+        #pw-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #persona-wipe.pw-active #pw-text { opacity: 1; transition-delay: 0.55s; }
+        .pw-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(9px, 1.4vw, 12px);
+            letter-spacing: 0.28em;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .pw-main {
+            font-family: 'Anton', sans-serif;
+            font-size: clamp(5rem, 15vw, 11rem);
+            font-style: italic;
+            color: #fff;
+            line-height: 0.85;
+            display: block;
+            letter-spacing: -0.02em;
+        }
+        .pw-jp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(9px, 1.4vw, 12px);
+            letter-spacing: 0.3em;
+            color: rgba(255,255,255,0.4);
+            display: block;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body class="antialiased">
+
+<div id="scroll-progress"></div>
 
 <!-- ═══════════════════════════════════════════════════ NAVIGATION ═══ -->
 <nav class="fixed w-full z-50 nav-blur transition-all duration-300" id="navbar">
@@ -474,11 +673,15 @@
                 <span class="mono text-[10px] text-red-500/40 hidden sm:block pt-0.5">// backend engineer</span>
             </div>
             <div class="hidden md:flex items-center space-x-7">
-                <a href="#about"      class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">About</a>
-                <a href="#services"   class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Services</a>
-                <a href="#experience" class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Experience</a>
-                <a href="#projects"   class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Projects</a>
-                <a href="#skills"     class="text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Skills</a>
+                <a href="#about"      class="nav-link text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">About</a>
+                <a href="#services"   class="nav-link text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Services</a>
+                <a href="#experience" class="nav-link text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Experience</a>
+                <a href="#projects"   class="nav-link text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Projects</a>
+                <a href="#skills"     class="nav-link text-gray-400 hover:text-red-400 transition-colors text-sm font-medium">Skills</a>
+                <button id="persona-toggle-btn" aria-label="Enter Persona Mode">
+                    <span class="persona-btn-dot"></span>
+                    PERSONA MODE
+                </button>
                 <a href="#contact"    class="px-4 py-1.5 rounded-full btn-primary text-white text-sm font-semibold">Contact</a>
             </div>
             <div class="md:hidden flex items-center">
@@ -496,6 +699,12 @@
             <a href="#projects"   class="block px-3 py-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-md text-base font-medium">Projects</a>
             <a href="#skills"     class="block px-3 py-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-md text-base font-medium">Skills</a>
             <a href="#contact"    class="block px-3 py-2 text-red-400 hover:bg-white/5 rounded-md text-base font-medium">Contact</a>
+            <div class="px-1 py-1">
+                <button id="persona-toggle-mobile" class="w-full" aria-label="Enter Persona Mode">
+                    <span class="persona-btn-dot"></span>
+                    PERSONA MODE
+                </button>
+            </div>
         </div>
     </div>
 </nav>
@@ -716,13 +925,14 @@
             <div class="fade-in glass-strong rounded-2xl p-6 md:p-8 hover-lift">
                 <div class="flex flex-col md:flex-row md:items-start gap-5 md:gap-8">
                     <div class="md:w-48 flex-shrink-0">
-                        <span class="date-pill">Jul 2023 – Present</span>
+                        <span class="date-pill">Jul 2024 – Present</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-1">
                             <h3 class="text-xl md:text-2xl font-bold text-white">Junior Software Engineer</h3>
+                            <span class="text-[10px] mono px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 whitespace-nowrap">↑ PROMOTED</span>
                         </div>
-                        <p class="text-red-400 font-semibold">Tri Valley Care</p>
+                        <p class="text-red-400 font-semibold">Tri Valley Urgent Care</p>
                         <p class="text-gray-500 text-xs mt-0.5 mb-4">Tracy, CA</p>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div class="flex items-start space-x-3">
@@ -758,11 +968,11 @@
             <div class="fade-in glass-strong rounded-2xl p-6 md:p-8 hover-lift">
                 <div class="flex flex-col md:flex-row md:items-start gap-5 md:gap-8">
                     <div class="md:w-48 flex-shrink-0">
-                        <span class="date-pill">Jul 2023 – 2024</span>
+                        <span class="date-pill">Jul 2023 – Jul 2024</span>
                     </div>
                     <div class="flex-1">
                         <h3 class="text-xl md:text-2xl font-bold text-white">Data Analyst</h3>
-                        <p class="text-orange-400 font-semibold">Tri Valley Care</p>
+                        <p class="text-orange-400 font-semibold">Tri Valley Urgent Care</p>
                         <p class="text-gray-500 text-xs mt-0.5 mb-4">Tracy, CA</p>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div class="flex items-start space-x-3">
@@ -844,6 +1054,82 @@
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
+            <!-- Project: OnDeck (Production) -->
+            <div class="fade-in glass-strong rounded-2xl overflow-hidden hover-lift group">
+                <div class="proj-img h-44 bg-gradient-to-br from-cyan-950/80 to-sky-950/80 flex items-center justify-center">
+                    <img src="screenshots/ondeck.gif" alt="OnDeck clinic scheduling demo"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <div class="text-center" style="display:none;">
+                        <i data-lucide="calendar-check" class="w-14 h-14 text-cyan-400 group-hover:scale-110 transition-transform duration-300 mx-auto"></i>
+                        <p class="mono text-cyan-500/50 text-[10px] mt-2 tracking-widest">PRODUCTION / NEXT.JS</p>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-bold text-white">OnDeck</h3>
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap ml-2">In Production</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+                        Clinic shift-scheduling platform running live at Tri Valley Urgent Care. Students book via weekly calendar or by photographing their printed schedule — Claude vision OCR extracts the shift. Dual auth, capacity enforcement, approvals, callouts, QR patient intake.
+                    </p>
+                    <div class="flex flex-wrap gap-1.5 mb-4">
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">Next.js 14</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">TypeScript</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">Supabase</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">Claude Vision</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">JWT</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+                            <span class="text-cyan-400 text-xs font-medium">Live Clinic System</span>
+                        </div>
+                        <a href="ondeck.html" class="flex items-center gap-1 text-gray-500 hover:text-cyan-400 transition-colors text-xs">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Case Study</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 0: Cloud Inventory System (Capstone) -->
+            <div class="fade-in glass-strong rounded-2xl overflow-hidden hover-lift group">
+                <div class="proj-img h-44 bg-gradient-to-br from-amber-950/80 to-orange-950/80 flex items-center justify-center">
+                    <img src="screenshots/cloud-inventory.gif" alt="Cloud Inventory System demo"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <div class="text-center" style="display:none;">
+                        <i data-lucide="boxes" class="w-14 h-14 text-amber-400 group-hover:scale-110 transition-transform duration-300 mx-auto"></i>
+                        <p class="mono text-amber-500/50 text-[10px] mt-2 tracking-widest">CLOUD / FASTAPI</p>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-bold text-white">Cloud Inventory System</h3>
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap ml-2">Capstone</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+                        Full-SDLC inventory platform: FastAPI REST backend with PostgreSQL storage, Redis cache-aside layer, and async pipelines — Dockerized and deployed to AWS EC2 with GitHub Actions CI/CD.
+                    </p>
+                    <div class="flex flex-wrap gap-1.5 mb-4">
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">FastAPI</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">PostgreSQL</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">Redis</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">AWS EC2</span>
+                        <span class="mono text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400">CI/CD</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="cloud" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span class="text-amber-400 text-xs font-medium">Production Pipeline</span>
+                        </div>
+                        <a href="cloud-inventory.html" class="flex items-center gap-1 text-gray-500 hover:text-amber-400 transition-colors text-xs">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Case Study</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Project 1: Multiplayer Blackjack -->
             <div class="fade-in glass-strong rounded-2xl overflow-hidden hover-lift group">
                 <div class="proj-img h-44 bg-gradient-to-br from-violet-950/80 to-purple-950/80 flex items-center justify-center">
@@ -873,9 +1159,9 @@
                             <i data-lucide="network" class="w-3.5 h-3.5 text-violet-400"></i>
                             <span class="text-violet-400 text-xs font-medium">TCP/IP Protocol</span>
                         </div>
-                        <a href="https://github.com/Bob-02/CS401-Blackjack" target="_blank" class="flex items-center gap-1 text-gray-500 hover:text-violet-400 transition-colors text-xs">
-                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
-                            <span>Code</span>
+                        <a href="multiplayer-blackjack.html" class="flex items-center gap-1 text-gray-500 hover:text-violet-400 transition-colors text-xs">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Case Study</span>
                         </a>
                     </div>
                 </div>
@@ -912,10 +1198,10 @@
                             <i data-lucide="bot" class="w-3.5 h-3.5 text-emerald-400"></i>
                             <span class="text-emerald-400 text-xs font-medium">LLM Integration</span>
                         </div>
-                        <span class="flex items-center gap-1 text-gray-600 text-xs">
-                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                            <span>Private repo</span>
-                        </span>
+                        <a href="ai-backend.html" class="flex items-center gap-1 text-gray-500 hover:text-emerald-400 transition-colors text-xs">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Case Study</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1181,7 +1467,7 @@
                 </div>
                 <div>
                     <h3 class="text-base font-bold text-white">AWS Certified Cloud Practitioner</h3>
-                    <p class="text-gray-400 text-sm">In Progress — Expected 2026</p>
+                    <p class="text-gray-400 text-sm">In Progress — Expected Late 2026</p>
                 </div>
             </div>
             <span class="px-4 py-2 rounded-full bg-red-500/10 text-red-400 text-sm font-medium border border-red-500/20">
@@ -1249,7 +1535,6 @@
                     <h3 class="text-white font-bold text-lg">Send Me a Message</h3>
                 </div>
 
-                <!-- Formspree: replace YOUR_FORM_ID below with your real Formspree form ID -->
                 <form id="contact-form" action="https://formspree.io/f/mjgjoerq" method="POST" class="space-y-4">
                     <div class="grid sm:grid-cols-2 gap-4">
                         <input type="text" name="name" placeholder="Your name *" required class="form-input">
@@ -1308,6 +1593,23 @@
 <!-- Konami hint (barely visible) -->
 <div id="konami-hint">↑↑↓↓←→←→BA</div>
 
+<!-- Back to top -->
+<a href="#about" id="back-to-top" aria-label="Back to top">
+    <i data-lucide="arrow-up" class="w-4 h-4"></i>
+</a>
+
+<!-- ── Persona Mode Wipe Overlay ── -->
+<div id="persona-wipe">
+    <div class="pw-bar pw-bar-1"></div>
+    <div class="pw-bar pw-bar-2"></div>
+    <div class="pw-bar pw-bar-3"></div>
+    <div id="pw-text">
+        <span class="pw-sub">// entering alt mode</span>
+        <span class="pw-main">PERSONA</span>
+        <span class="pw-jp">ペルソナ ・ INITIALIZING</span>
+    </div>
+</div>
+
 <script>
     lucide.createIcons();
 
@@ -1365,6 +1667,28 @@
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ── Scroll progress + back-to-top + active nav ──
+    const progressBar = document.getElementById('scroll-progress');
+    const backToTop = document.getElementById('back-to-top');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = ['about','services','experience','projects','skills']
+        .map(id => document.getElementById(id)).filter(Boolean);
+
+    function onScroll() {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        progressBar.style.width = (max > 0 ? (doc.scrollTop / max) * 100 : 0) + '%';
+        backToTop.classList.toggle('show', doc.scrollTop > 600);
+
+        let current = sections[0]?.id;
+        for (const s of sections) {
+            if (s.getBoundingClientRect().top <= 120) current = s.id;
+        }
+        navLinks.forEach(l => l.classList.toggle('nav-active', l.getAttribute('href') === '#' + current));
+    }
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 
     // ── Typing animation ──
     const roles = [
@@ -1434,7 +1758,56 @@
         const hint = document.getElementById('konami-hint');
         if (hint) hint.style.opacity = '0';
     }, 5000);
+
+    // ── Smooth scroll to hash on return from persona.html ──
+    window.addEventListener('load', () => {
+        if (window.location.hash) {
+            const target = document.querySelector(window.location.hash);
+            if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth' }), 80);
+        }
+    });
+
+    // ── Persona Mode ──
+    (function () {
+        let personaBusy = false;
+        const wipeEl  = document.getElementById('persona-wipe');
+        const bars    = wipeEl.querySelectorAll('.pw-bar');
+        const btnDesk = document.getElementById('persona-toggle-btn');
+        const btnMob  = document.getElementById('persona-toggle-mobile');
+
+        function triggerPersonaWipe() {
+            if (personaBusy) return;
+            personaBusy = true;
+            window.personaSFX?.play('whoosh');
+            if (btnDesk) btnDesk.disabled = true;
+            if (btnMob)  btnMob.disabled  = true;
+
+            wipeEl.classList.add('pw-active');
+
+            const ease = 'cubic-bezier(0.76,0,0.24,1)';
+            bars[0].style.animation = `pwBarIn 0.38s ${ease} 0s    forwards`;
+            bars[1].style.animation = `pwBarIn 0.38s ${ease} 0.15s forwards`;
+            bars[2].style.animation = `pwBarIn 0.38s ${ease} 0.30s forwards`;
+
+            setTimeout(() => { window.location.href = 'persona.html'; }, 1250);
+        }
+
+        btnDesk.addEventListener('click', triggerPersonaWipe);
+        btnMob.addEventListener('click',  triggerPersonaWipe);
+
+        // Double-P shortcut
+        let pTimes = [];
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'p' && e.key !== 'P') return;
+            const now = Date.now();
+            pTimes = pTimes.filter(t => now - t < 600);
+            pTimes.push(now);
+            if (pTimes.length >= 2) { pTimes = []; triggerPersonaWipe(); }
+        });
+    })();
 </script>
+
+<script src="persona-sfx.js"></script>
 
 <!-- ── Vercel Web Analytics ── -->
 <script>
